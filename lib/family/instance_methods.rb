@@ -42,10 +42,10 @@ module Family
     end
     
     def is_the_blank_of(user, include_adoptions=false)
+      #TODO: find a better way to do this. especially the last one
       return :child if self.parent_id == user.id
       return :sibling if self.parent_id == user.parent_id
       return :parent if self.id == user.parent_id
-      
       return self.user_adoptions.find_by_adopted_user_id(user.id).relationship_type.to_sym rescue nil if include_adoptions
     end
     
