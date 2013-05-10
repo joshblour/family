@@ -9,14 +9,21 @@ class << ActiveRecord::Base
       end
     end
     
-    
     if options[:use_adoptions]
       # if ActiveRecord::Base.connection.table_exists? 'user_adoptions'
-        @use_adoptions = true
+        $allow_adoptions = true
+        has_many :user_adoptions
+        
+        # DOESNT WORK BECAUSE TABLES ARE IN DIFFERENT DATABSES. has_many :adopted_users, through: :user_adoptions
+        # TODO: CAN I FORCE SEPARATE QUERIES?
+        
       # else
       #   raise Family::FamilyException.new("user_adoptions table doesn't exist. Please run rails g family:install then rake db:migrate")
       # end
     end
+    
+   
+    $base_class = self
     
       
       

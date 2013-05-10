@@ -16,7 +16,7 @@ module Family
     end
 
     def copy_migrations
-      migration_template "create_adopted_users.rb", "db/migrate/create_adopted_users.rb"
+      migration_template "create_user_adoptions.rb", "db/migrate/create_user_adoptions.rb"
     end
   end
 end

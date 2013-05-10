@@ -1,16 +1,24 @@
 module Family
   module InstanceMethods
     
-    def children
-      self.class.where(self.parent_column => self.id)
+    # alias_method :parents, :parent
+    
+    def children(include_adoptions=false)
+      users = self.class.where(self.parent_column => self.id)
+      users << self.user_adoptions.where(relationship_type: :child).map(&:adopted_user) if include_adoptions
+      return users.flatten
     end
         
-    def siblings
-      self.class.where(self.parent_column => self.parent_id)
+    def siblings(include_adoptions=false)
+      users = self.class.where(self.parent_column => self.parent_id)
+      users << self.user_adoptions.where(relationship_type: :sibling).map(&:adopted_user) if include_adoptions
+      return users.flatten
     end
 
-    def parent
-      self.class.find(self.parent_id)
+    def parent(include_adoptions=false)
+      users = self.class.find(self.parent_id)
+      users << self.user_adoptions.where(relationship_type: :parent).map(&:adopted_user) if include_adoptions
+      return users.flatten
     end    
     
     def parent_id
@@ -18,22 +26,37 @@ module Family
     end
     
     def find_related(*args)
-      raise TypeError, "arguments can't be empty" if args == []
-      query = []
-      query << "#{parent_column} = #{self.id}" unless (args & [:children, :child]).empty?
-      query << "#{parent_column} = #{self.parent_id}" unless (args & [:siblings, :sibling]).empty?
-      query << "id = #{self.parent_id}" unless (args & [:parent, :parents]).empty?
-      self.class.where(query.join(' OR '))
+      raise TypeError, "arguments can't be empty" if args == [] || args == [:include_adoptions]
+      args = args.map {|a| a.to_s.singularize.to_sym} #TODO: find a better way to convert
+      users = self.class.where(build_query_from_args(args))
+      users << self.user_adoptions.where('relationship_type in (?)', args).map(&:adopted_user) if args.include?(:include_adoption) #singluar because of the singlarize method
+      return users.flatten
     end
     
-    def is_the_blank_of(user)
-      return 'child' if self.parent_id == user.id
-      return 'sibling' if self.parent_id == user.parent_id
-      return 'parent' if self.id == user.parent_id
-    end   
+    def build_query_from_args(args)
+      query = []
+      query << "#{parent_column} = #{self.id}" if args.include?(:child)
+      query << "#{parent_column} = #{self.parent_id}" if args.include?(:sibling)
+      query << "id = #{self.parent_id}" if args.include?(:parent)
+      return query.join(' OR ')
+    end
     
-    def adopt_parent(user)
-    end 
-
+    def is_the_blank_of(user, include_adoptions=false)
+      return :child if self.parent_id == user.id
+      return :sibling if self.parent_id == user.parent_id
+      return :parent if self.id == user.parent_id
+      
+      return self.user_adoptions.find_by_adopted_user_id(user.id).relationship_type.to_sym rescue nil if include_adoptions
+    end
+    
+    def adopt_user(user, relationship)
+      #TODO: raise correct types of errors
+      raise TypeError, 'relationship is invalid' unless Family::RELATIONSHIP_TYPES.include?(relationship.to_sym)
+      raise TypeError, 'adoptions are not enabled' unless $allow_adoptions
+      raise TypeError, 'users are already related' unless self.is_the_blank_of(user).nil?
+      self.user_adoptions.create(adopted_user_id: user.id, relationship_type: relationship)
+    end
+      
+      
   end
 end
