@@ -18,7 +18,7 @@ module Family
     def parent(include_adoptions=false)
       users = self.class.find(self.parent_id)
       users << self.user_adoptions.where(relationship_type: :parent).map(&:adopted_user) if include_adoptions
-      return users.flatten
+      return users.is_a?(Array) ? users.flatten : users
     end    
     
     def parent_id
@@ -36,13 +36,14 @@ module Family
     def build_query_from_args(args)
       query = []
       query << "#{parent_column} = #{self.id}" if args.include?(:child)
-      query << "#{parent_column} = #{self.parent_id}" if args.include?(:sibling)
-      query << "id = #{self.parent_id}" if args.include?(:parent)
+      query << "#{parent_column} = #{self.parent_id}" if args.include?(:sibling) && !self.parent_id.nil?
+      query << "id = #{self.parent_id}" if args.include?(:parent) && !self.parent_id.nil?
       return query.join(' OR ')
     end
     
     def is_the_blank_of(user, include_adoptions=false)
       #TODO: find a better way to do this. especially the last one
+      return :self if self.id == user.id
       return :child if self.parent_id == user.id
       return :sibling if self.parent_id == user.parent_id
       return :parent if self.id == user.parent_id
