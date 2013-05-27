@@ -5,19 +5,19 @@ module Family
     
     def children(include_adoptions=false)
       users = self.class.where(self.parent_column => self.id)
-      users << self.user_adoptions.where(relationship_type: :child).map(&:adopted_user) if include_adoptions
+      users += self.user_adoptions.where(relationship_type: :child).map(&:adopted_user) if include_adoptions
       return users.flatten
     end
         
     def siblings(include_adoptions=false)
       users = self.class.where(self.parent_column => self.parent_id)
-      users << self.user_adoptions.where(relationship_type: :sibling).map(&:adopted_user) if include_adoptions
+      users += self.user_adoptions.where(relationship_type: :sibling).map(&:adopted_user) if include_adoptions
       return users.flatten
     end
 
     def parent(include_adoptions=false)
       users = self.class.find(self.parent_id)
-      users << self.user_adoptions.where(relationship_type: :parent).map(&:adopted_user) if include_adoptions
+      users += self.user_adoptions.where(relationship_type: :parent).map(&:adopted_user) if include_adoptions
       return users.is_a?(Array) ? users.flatten : users
     end    
     
@@ -29,7 +29,7 @@ module Family
       raise TypeError, "arguments can't be empty" if args == [] || args == [:include_adoptions]
       args = args.map {|a| a.to_s.singularize.to_sym} #TODO: find a better way to convert
       users = self.class.where(build_query_from_args(args))
-      users << self.user_adoptions.where('relationship_type in (?)', args).map(&:adopted_user) if args.include?(:include_adoption) #singluar because of the singlarize method
+      users += self.user_adoptions.where('relationship_type in (?)', args).map(&:adopted_user) if args.include?(:include_adoption) #singluar because of the singlarize method
       return users.flatten
     end
     
