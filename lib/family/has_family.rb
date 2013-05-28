@@ -1,5 +1,6 @@
 class << ActiveRecord::Base
   def has_family options = {}
+    $base_class = self
     
     # Check options
     raise Family::FamilyException.new("Options for has_family must be in a hash.") unless options.is_a? Hash
@@ -14,18 +15,13 @@ class << ActiveRecord::Base
         $allow_adoptions = true
         has_many :user_adoptions
         
-        # DOESNT WORK BECAUSE TABLES ARE IN DIFFERENT DATABSES. has_many :adopted_users, through: :user_adoptions
+        # DOESNT WORK BECAUSE TABLES ARE IN DIFFERENT DATABASES. has_many :adopted_users, through: :user_adoptions
         # TODO: CAN I FORCE SEPARATE QUERIES?
         
       # else
       #   raise Family::FamilyException.new("user_adoptions table doesn't exist. Please run rails g family:install then rake db:migrate")
       # end
-    end
-    
-   
-    $base_class = self
-    
-      
+    end    
       
     # Include instance methods
     include Family::InstanceMethods

@@ -7,5 +7,4 @@ require "family/models/adopted_user"
 
 module Family
   RELATIONSHIP_TYPES = [:parent, :child, :sibling]
-  # Your code goes here...
 end
