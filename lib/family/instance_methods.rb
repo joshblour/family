@@ -43,7 +43,9 @@ module Family
     
     def is_the_blank_of(user, include_adoptions=false)
       #TODO: find a better way to do this. especially the last one
+      # order is important here. Adopted relationships have precedent over organic relationships
       return self.user_adoptions.find_by_adopted_user_id(user.id).relationship_type.to_sym rescue nil if include_adoptions
+
       return :self if self.id == user.id
       return :child if self.parent_id == user.id
       return :sibling if self.parent_id == user.parent_id
