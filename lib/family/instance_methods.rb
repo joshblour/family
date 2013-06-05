@@ -43,19 +43,22 @@ module Family
     
     def is_the_blank_of(user, include_adoptions=false)
       #TODO: find a better way to do this. especially the last one
+      return self.user_adoptions.find_by_adopted_user_id(user.id).relationship_type.to_sym rescue nil if include_adoptions
       return :self if self.id == user.id
       return :child if self.parent_id == user.id
       return :sibling if self.parent_id == user.parent_id
       return :parent if self.id == user.parent_id
-      return self.user_adoptions.find_by_adopted_user_id(user.id).relationship_type.to_sym rescue nil if include_adoptions
     end
     
     def adopt_user(user, relationship)
       #TODO: raise correct types of errors
       raise TypeError, 'relationship is invalid' unless Family::RELATIONSHIP_TYPES.include?(relationship.to_sym)
       raise TypeError, 'adoptions are not enabled' unless $allow_adoptions
-      raise TypeError, 'users are already related' unless self.is_the_blank_of(user).nil?
-      self.user_adoptions.create(adopted_user_id: user.id, relationship_type: relationship)
+      unless self.is_the_blank_of(user, true) == relationship
+        self.user_adoptions.create(adopted_user_id: user.id, relationship_type: relationship)
+      else
+        logger.info "user #{self.id} is already the #{relationship} of user #{user.id}"
+      end
     end
       
       
