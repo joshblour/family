@@ -30,7 +30,7 @@ module Family
       args = args.map {|a| a.to_s.singularize.to_sym} #TODO: find a better way to convert
       users = self.class.where(build_query_from_args(args))
       users += self.user_adoptions.where('relationship_type in (?)', args).map(&:adopted_user) if args.include?(:include_adoption) #singluar because of the singlarize method
-      return users
+      return users.uniq
     end
     
     def build_query_from_args(args)
@@ -43,6 +43,7 @@ module Family
     
     def is_the_blank_of(user, include_adoptions=false)
       #TODO: find a better way to do this. especially the last one
+      
       # order is important here. Adopted relationships have precedent over organic relationships
       return self.user_adoptions.find_by_adopted_user_id(user.id).relationship_type.to_sym rescue nil if include_adoptions
 
@@ -52,10 +53,11 @@ module Family
       return :parent if self.id == user.parent_id
     end
     
-    def adopt_user(user, relationship)
+    def become_the_blank_of(user, relationship)
       #TODO: raise correct types of errors
       raise TypeError, 'relationship is invalid' unless Family::RELATIONSHIP_TYPES.include?(relationship.to_sym)
       raise TypeError, 'adoptions are not enabled' unless $allow_adoptions
+      #Dont't build relationship if users are already related in the same way
       unless self.is_the_blank_of(user, true) == relationship
         self.user_adoptions.create(adopted_user_id: user.id, relationship_type: relationship)
       else
