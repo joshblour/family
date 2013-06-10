@@ -3,11 +3,6 @@ module Family
     
     # alias_method :parents, :parent
 
-    def adopted_user_ids(*args)
-      args =  args.flatten.map {|a| a.to_s.singularize.to_sym} #TODO: find a better way to convert
-      self.user_adoptions.where('relationship_type in (?)', args).pluck(:adopted_user_id)
-    end
-    
     def children(include_adoptions=false)
       adoptions = adopted_user_ids(:children) if include_adoptions
       self.class.where("#{parent_column} = ? OR id IN (?)", self.id, adoptions)
@@ -45,28 +40,18 @@ module Family
     end
     
     def is_the_blank_of(user, include_adoptions=false)
-      #TODO: find a better way to do this. especially the last one
+      #TODO: find a better way to do this. case/when?
       
       # order is important here. Adopted relationships have precedence over organic relationships
-      return self.user_adoptions.find_by_adopted_user_id(user.id).relationship_type.to_sym rescue nil if include_adoptions
+      adopted_relationship = self.user_adoptions.find_by_adopted_user_id(user.id).relationship_type.to_sym rescue nil if include_adoptions
+      return adopted_relationship if adopted_relationship
 
       return :self if self.id == user.id
-      return :child if self.parent_column == user.id
-      return :sibling if self.parent_column == user.parent_id
+      return :child if self.parent_id == user.id
+      return :sibling if self.parent_id == user.parent_id
       return :parent if self.id == user.parent_id
     end
-    
-    def become_the_blank_of(user, relationship)
-      #TODO: raise correct types of errors
-      raise TypeError, 'relationship is invalid' unless Family::RELATIONSHIP_TYPES.include?(relationship.to_sym)
-      raise TypeError, 'adoptions are not enabled' unless $allow_adoptions
-      #Dont't build relationship if users are already related in the same way
-      unless self.is_the_blank_of(user, true) == relationship
-        self.user_adoptions.create(adopted_user_id: user.id, relationship_type: relationship)
-      else
-        logger.info "user #{self.id} is already the #{relationship} of user #{user.id}"
-      end
-    end
+
       
       
   end

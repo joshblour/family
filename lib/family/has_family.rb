@@ -25,6 +25,7 @@ class << ActiveRecord::Base
       
     # Include instance methods
     include Family::InstanceMethods
+    include Family::AdoptionMethods
 
     # Include dynamic class methods
     extend Family::ClassMethods
