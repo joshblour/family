@@ -22,7 +22,7 @@ class UserAdoption < ActiveRecord::Base
   end
   
   def relationship_doesnt_exist
-    if user && adopted_user && relationship_type && user.is_the_blank_of(adopted_user, true) == relationship_type.to_sym    
+    if user && adopted_user && relationship_type && adopted_user.is_the_blank_of(user, true) == relationship_type.to_sym    
       errors[:relationship_type] << "users are already related in this way"
     end
   end      
