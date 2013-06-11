@@ -6,7 +6,7 @@ module Family
       self.user_adoptions.where('relationship_type in (?)', args).pluck(:adopted_user_id)
     end
     
-    def become_the_blank_of(user, relationship)
+    def adopt_as_a_blank(user, relationship)
       #TODO: raise correct types of errors
       raise TypeError, 'relationship is invalid' unless Family::RELATIONSHIP_TYPES.include?(relationship)
       raise TypeError, 'adoptions are not enabled' unless $allow_adoptions
@@ -23,7 +23,7 @@ module Family
     end
     
     def method_missing(meth, *args, &block)
-      if meth.to_s =~ /^become_the_(.+)_of$/
+      if meth.to_s =~ /^adopt_as_a_(.+)$/
         build_adoption_from_method_name($1, *args, &block)
       else
         super
@@ -32,7 +32,7 @@ module Family
 
     def build_adoption_from_method_name(relationship_type, *args, &block)
       user = args.first
-      become_the_blank_of(user, relationship_type.to_sym) if user.class == User
+      adopt_as_a_blank(user, relationship_type.to_sym) if user.class == User
     end
     
   end
