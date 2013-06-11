@@ -9,9 +9,18 @@ class UserAdoption < ActiveRecord::Base
   validates :user_id, :adopted_user_id, :relationship_type, presence: true
 
   validate :relationship_doesnt_exist, :on => :create
+  before_destroy :validate_not_locked
+  
+
+  
+  
 
   private
-
+  
+  def validate_not_locked
+    !locked?
+  end
+  
   def relationship_doesnt_exist
     if user && adopted_user && relationship_type && user.is_the_blank_of(adopted_user, true) == relationship_type.to_sym    
       errors[:relationship_type] << "users are already related in this way"
