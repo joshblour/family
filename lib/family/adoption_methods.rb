@@ -6,17 +6,17 @@ module Family
       self.user_adoptions.where('relationship_type in (?)', args).pluck(:adopted_user_id)
     end
     
-    def adopt_as_a_blank(user, relationship)
+    def adopt_as_a_blank(user, relationship, reference_id=nil)
       #TODO: raise correct types of errors
       raise TypeError, 'relationship is invalid' unless Family::RELATIONSHIP_TYPES.include?(relationship)
       raise TypeError, 'adoptions are not enabled' unless $allow_adoptions
-      self.create_adoption(user, relationship)
+      self.create_adoption(user, relationship, reference_id)
     end
     
-    def create_adoption(user, relationship)
+    def create_adoption(user, relationship, reference_id=nil)
       #Dont't build relationship if users are already related in the same way
       unless self.is_the_blank_of(user, true) == relationship
-        self.user_adoptions.create(adopted_user_id: user.id, relationship_type: relationship)
+        self.user_adoptions.create(adopted_user_id: user.id, relationship_type: relationship, reference_id: nil)
       else
         logger.info "user #{self.id} is already the #{relationship} of user #{user.id}"
       end
@@ -32,7 +32,8 @@ module Family
 
     def build_adoption_from_method_name(relationship_type, *args, &block)
       user = args.first
-      adopt_as_a_blank(user, relationship_type.to_sym) if user.class == User
+      reference_id = args.last.class == String ? args.last : nil
+      adopt_as_a_blank(user, relationship_type.to_sym, reference_id) if user.class == User
     end
     
   end

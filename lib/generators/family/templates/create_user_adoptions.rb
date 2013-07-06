@@ -4,6 +4,7 @@ class CreateUserAdoptions < ActiveRecord::Migration
       t.integer :user_id
       t.integer :adopted_user_id
       t.string :relationship_type
+      t.string :reference_id
       t.boolean :locked, default: false
 
       t.timestamps
