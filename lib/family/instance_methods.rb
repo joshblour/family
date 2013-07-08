@@ -2,15 +2,17 @@ module Family
   module InstanceMethods
     
     # alias_method :parents, :parent
-
+  
     def children(include_adoptions=false)
       adoptions = adopted_user_ids(:children) if include_adoptions
       self.class.where("#{parent_column} = ? OR id IN (?)", self.id, adoptions)
     end
         
-    def siblings(include_adoptions=false)
+    def siblings(include_adoptions=false, include_self = true)
       adoptions = adopted_user_ids(:siblings) if include_adoptions
-      self.class.where("#{parent_column} = ? OR id IN (?)", self.parent_id, adoptions)
+      results = self.class.where("#{parent_column} = ? OR id IN (?)", self.parent_id, adoptions)
+      results = results.where('id <> ?', self.id) unless include_self
+      return results
     end
 
     def parent(include_adoptions=false)
@@ -30,12 +32,12 @@ module Family
         
     def build_query_from_args(args)
       adoptions = adopted_user_ids(args) if args.include?(:include_adoption)
-      
       query = []
       query << "#{parent_column} = #{self.id}" if args.include?(:child)
       query << "#{parent_column} = #{self.parent_id}" if args.include?(:sibling) && !self.parent_id.nil?
       query << "id = #{self.parent_id}" if args.include?(:parent) && !self.parent_id.nil?
       query << "id in (#{adoptions.join(', ')})"  if adoptions && !adoptions.empty?
+      args.include?(:include_self) ? query << "id = #{self.id}" : query << "id <> #{self.id}"
       return query.join(' OR ')
     end
     
