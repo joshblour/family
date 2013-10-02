@@ -37,8 +37,9 @@ module Family
       query << "#{parent_column} = #{self.parent_id}" if args.include?(:sibling) && !self.parent_id.nil?
       query << "id = #{self.parent_id}" if args.include?(:parent) && !self.parent_id.nil?
       query << "id in (#{adoptions.join(', ')})"  if adoptions && !adoptions.empty?
-      args.include?(:include_self) ? query << "id = #{self.id}" : query << "id <> #{self.id}"
-      return query.join(' OR ')
+      joined_query = query.join(' OR ')
+      
+      return args.include?(:include_self) ?  "#{joined_query} OR id = #{self.id}" : "#{joined_query} AND id <> #{self.id}"
     end
     
     def is_the_blank_of(user, include_adoptions=false)
