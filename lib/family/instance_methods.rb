@@ -39,7 +39,7 @@ module Family
       query << "id in (#{adoptions.join(', ')})"  if adoptions && !adoptions.empty?
       joined_query = query.join(' OR ')
       
-      return args.include?(:include_self) ?  "#{joined_query} OR id = #{self.id}" : "#{joined_query} AND id <> #{self.id}"
+      return args.include?(:include_self) ?  "#{joined_query} OR id = #{self.id}" : "(#{joined_query}) AND id <> #{self.id}"
     end
     
     def is_the_blank_of(user, include_adoptions=false)
