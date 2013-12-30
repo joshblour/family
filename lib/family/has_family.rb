@@ -13,7 +13,7 @@ class << ActiveRecord::Base
     if options[:use_adoptions]
       # if ActiveRecord::Base.connection.table_exists? 'user_adoptions'
         $allow_adoptions = true
-        has_many :user_adoptions
+        has_many :user_adoptions, dependent: :destroy
         
         # DOESNT WORK BECAUSE TABLES ARE IN DIFFERENT DATABASES. has_many :adopted_users, through: :user_adoptions
         # TODO: CAN I FORCE SEPARATE QUERIES?
